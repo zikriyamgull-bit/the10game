@@ -20,7 +20,9 @@ export default function GameScreen() {
       const delay = 800 + Math.random() * 700;
       aiTimerRef.current = setTimeout(() => {
         const replacementCount = Object.keys(state.replacements).length;
-        if (replacementCount > 0 && !shouldAISucceed(replacementCount)) {
+        const currentHasReplacement = !!state.replacements[state.currentNumber];
+        // AI only risks failing on numbers that actually have a replacement
+        if (currentHasReplacement && !shouldAISucceed(replacementCount)) {
           dispatch({ type: "AI_FAILED" });
         } else {
           dispatch({ type: "ADVANCE" });

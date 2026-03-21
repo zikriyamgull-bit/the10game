@@ -110,18 +110,21 @@ function gameReducer(state: GameState, action: Action): GameState {
 // AI logic
 export function shouldAISucceed(replacementCount: number): boolean {
   let successRate: number;
-  if (replacementCount <= 3) {
-    // Easy: 40-50%
+  if (replacementCount <= 1) {
+    // Easy: 35-40% — player builds confidence
     successRate = 0.35 + replacementCount * 0.05;
+  } else if (replacementCount <= 4) {
+    // Competitive: 60-75% — ramps up fast after round 2
+    successRate = 0.55 + (replacementCount - 1) * 0.07;
   } else if (replacementCount <= 7) {
-    // Competitive: 65-75%
-    successRate = 0.55 + (replacementCount - 3) * 0.05;
-  } else if (replacementCount <= 12) {
-    // Hard: 85-90%
-    successRate = 0.83 + (replacementCount - 8) * 0.015;
+    // Hard: 80-90% — real challenge
+    successRate = 0.78 + (replacementCount - 4) * 0.04;
+  } else if (replacementCount <= 10) {
+    // Very Hard: 90-95%
+    successRate = 0.90 + (replacementCount - 7) * 0.02;
   } else {
     // Boss: 95-98%
-    successRate = Math.min(0.95 + (replacementCount - 13) * 0.01, 0.98);
+    successRate = Math.min(0.95 + (replacementCount - 10) * 0.01, 0.98);
   }
   return Math.random() < successRate;
 }

@@ -87,6 +87,7 @@ export default function GameScreen() {
 
   const handleFail = () => {
     if (state.isAITurn) return;
+    soundManager.fail();
     dispatch({ type: "PLAYER_FAILED" });
   };
 

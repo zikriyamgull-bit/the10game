@@ -1,0 +1,17 @@
+{
+  "name": "THE 10 GAME",
+  "short_name": "10 Game",
+  "description": "A viral TikTok memory challenge. How many replacements can you survive?",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0f",
+  "theme_color": "#ff0080",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

@@ -83,7 +83,7 @@ function gameReducer(state: GameState, action: Action): GameState {
         currentNumber: 1,
         currentPlayer: nextPlayer,
         isAITurn: state.mode === "solo" && nextPlayer === 2,
-        screen: "game",
+        screen: "roundSummary",
       };
     }
     case "PLAYER_FAILED":

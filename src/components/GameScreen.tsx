@@ -62,15 +62,18 @@ export default function GameScreen() {
     if (!isReplacement) return;
     const correctWord = state.replacements[state.currentNumber];
     if (inputValue.trim().toUpperCase() === correctWord.toUpperCase()) {
+      soundManager.correct();
       setInputValue("");
       dispatch({ type: "ADVANCE" });
     } else {
+      soundManager.wrong();
       const remaining = triesLeft - 1;
       setTriesLeft(remaining);
       setShowWrong(true);
       setInputValue("");
       setTimeout(() => setShowWrong(false), 600);
       if (remaining <= 0) {
+        soundManager.fail();
         dispatch({ type: "PLAYER_FAILED" });
       }
     }

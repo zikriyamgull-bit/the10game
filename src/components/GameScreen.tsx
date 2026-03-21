@@ -185,36 +185,8 @@ export default function GameScreen() {
         </motion.p>
       </div>
 
-      {/* Replacements list */}
-      {replacementEntries.length > 0 && (
-        <div className="mb-4">
-          <button
-            onClick={() => setShowReplacements(!showReplacements)}
-            className="flex items-center gap-2 text-sm text-muted-foreground mb-2 active:opacity-70"
-          >
-            📝 Active Replacements ({replacementEntries.length})
-            {showReplacements ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          </button>
-          <AnimatePresence>
-            {showReplacements && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden space-y-1"
-              >
-                {replacementEntries.map(({ num, word }) => (
-                  <div key={num} className="flex gap-2 text-sm bg-card rounded-lg px-3 py-2">
-                    <span className="text-muted-foreground">{num}</span>
-                    <span className="text-muted-foreground">→</span>
-                    <span className="text-neon-pink font-bold">{word}</span>
-                  </div>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-      )}
+
+
 
       {/* Action buttons - only show NEXT when no input challenge */}
       <div className="flex flex-col gap-3 pb-4">

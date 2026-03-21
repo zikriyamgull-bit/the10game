@@ -4,7 +4,6 @@ import { useGame, shouldAISucceed } from "@/contexts/GameContext";
 
 export default function GameScreen() {
   const { state, dispatch } = useGame();
-  const [showReplacements, setShowReplacements] = useState(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   // Input challenge state

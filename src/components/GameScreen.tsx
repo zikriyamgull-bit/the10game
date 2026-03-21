@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame, shouldAISucceed } from "@/contexts/GameContext";
+import PauseMenu from "@/components/PauseMenu";
+import { soundManager } from "@/hooks/useSoundManager";
 
 export default function GameScreen() {
   const { state, dispatch } = useGame();

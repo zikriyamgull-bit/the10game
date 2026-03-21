@@ -109,9 +109,20 @@ function gameReducer(state: GameState, action: Action): GameState {
 
 // AI logic
 export function shouldAISucceed(replacementCount: number): boolean {
-  const baseChance = 0.5;
-  const bonus = replacementCount * 0.05;
-  const successRate = Math.min(baseChance + bonus, 0.95);
+  let successRate: number;
+  if (replacementCount <= 3) {
+    // Easy: 40-50%
+    successRate = 0.35 + replacementCount * 0.05;
+  } else if (replacementCount <= 7) {
+    // Competitive: 65-75%
+    successRate = 0.55 + (replacementCount - 3) * 0.05;
+  } else if (replacementCount <= 12) {
+    // Hard: 85-90%
+    successRate = 0.83 + (replacementCount - 8) * 0.015;
+  } else {
+    // Boss: 95-98%
+    successRate = Math.min(0.95 + (replacementCount - 13) * 0.01, 0.98);
+  }
   return Math.random() < successRate;
 }
 

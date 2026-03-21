@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame, shouldAISucceed } from "@/contexts/GameContext";
+import PauseMenu from "@/components/PauseMenu";
+import { soundManager } from "@/hooks/useSoundManager";
 
 export default function GameScreen() {
   const { state, dispatch } = useGame();
@@ -51,7 +53,8 @@ export default function GameScreen() {
 
   const handleNext = () => {
     if (state.isAITurn) return;
-    if (needsInput) return; // Must use input instead
+    if (needsInput) return;
+    soundManager.advance();
     dispatch({ type: "ADVANCE" });
   };
 
@@ -59,15 +62,18 @@ export default function GameScreen() {
     if (!isReplacement) return;
     const correctWord = state.replacements[state.currentNumber];
     if (inputValue.trim().toUpperCase() === correctWord.toUpperCase()) {
+      soundManager.correct();
       setInputValue("");
       dispatch({ type: "ADVANCE" });
     } else {
+      soundManager.wrong();
       const remaining = triesLeft - 1;
       setTriesLeft(remaining);
       setShowWrong(true);
       setInputValue("");
       setTimeout(() => setShowWrong(false), 600);
       if (remaining <= 0) {
+        soundManager.fail();
         dispatch({ type: "PLAYER_FAILED" });
       }
     }
@@ -81,6 +87,7 @@ export default function GameScreen() {
 
   const handleFail = () => {
     if (state.isAITurn) return;
+    soundManager.fail();
     dispatch({ type: "PLAYER_FAILED" });
   };
 
@@ -99,7 +106,8 @@ export default function GameScreen() {
   return (
     <div className="flex flex-col min-h-screen px-4 py-6">
       {/* Top bar */}
-      <div className="flex justify-between text-sm font-body text-muted-foreground bg-card rounded-lg px-4 py-2">
+      <div className="flex items-center justify-between text-sm font-body text-muted-foreground bg-card rounded-lg px-4 py-2">
+        <PauseMenu />
         <span>Round <strong className="text-foreground">{state.round}</strong></span>
         <span>Replacements <strong className="text-neon-pink">{state.totalReplacements}</strong></span>
         <span>Streak <strong className="text-electric-yellow">{state.streak}</strong></span>

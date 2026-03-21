@@ -53,7 +53,8 @@ export default function GameScreen() {
 
   const handleNext = () => {
     if (state.isAITurn) return;
-    if (needsInput) return; // Must use input instead
+    if (needsInput) return;
+    soundManager.advance();
     dispatch({ type: "ADVANCE" });
   };
 

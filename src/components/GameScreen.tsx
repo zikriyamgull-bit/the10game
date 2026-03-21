@@ -8,11 +8,28 @@ export default function GameScreen() {
   const [showReplacements, setShowReplacements] = useState(false);
   const aiTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
-  const currentDisplay = state.replacements[state.currentNumber]
-    ? state.replacements[state.currentNumber]
-    : String(state.currentNumber);
+  // Input challenge state
+  const [inputValue, setInputValue] = useState("");
+  const [triesLeft, setTriesLeft] = useState(3);
+  const [showWrong, setShowWrong] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const isReplacement = !!state.replacements[state.currentNumber];
+  const needsInput = isReplacement && !state.isAITurn;
+
+  // Reset input state when number changes
+  useEffect(() => {
+    setInputValue("");
+    setTriesLeft(3);
+    setShowWrong(false);
+  }, [state.currentNumber, state.round]);
+
+  // Focus input when challenge appears
+  useEffect(() => {
+    if (needsInput && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [needsInput, state.currentNumber]);
 
   // AI auto-play
   useEffect(() => {
@@ -21,7 +38,6 @@ export default function GameScreen() {
       aiTimerRef.current = setTimeout(() => {
         const replacementCount = Object.keys(state.replacements).length;
         const currentHasReplacement = !!state.replacements[state.currentNumber];
-        // AI only risks failing on numbers that actually have a replacement
         if (currentHasReplacement && !shouldAISucceed(replacementCount)) {
           dispatch({ type: "AI_FAILED" });
         } else {
@@ -34,7 +50,32 @@ export default function GameScreen() {
 
   const handleNext = () => {
     if (state.isAITurn) return;
+    if (needsInput) return; // Must use input instead
     dispatch({ type: "ADVANCE" });
+  };
+
+  const handleInputSubmit = () => {
+    if (!isReplacement) return;
+    const correctWord = state.replacements[state.currentNumber];
+    if (inputValue.trim().toUpperCase() === correctWord.toUpperCase()) {
+      setInputValue("");
+      dispatch({ type: "ADVANCE" });
+    } else {
+      const remaining = triesLeft - 1;
+      setTriesLeft(remaining);
+      setShowWrong(true);
+      setInputValue("");
+      setTimeout(() => setShowWrong(false), 600);
+      if (remaining <= 0) {
+        dispatch({ type: "PLAYER_FAILED" });
+      }
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      handleInputSubmit();
+    }
   };
 
   const handleFail = () => {
@@ -46,6 +87,13 @@ export default function GameScreen() {
     num: Number(k),
     word: v,
   }));
+
+  // Display: show number for non-replacement, or "?" for replacement (player must type)
+  const currentDisplay = needsInput
+    ? "?"
+    : isReplacement
+    ? state.replacements[state.currentNumber]
+    : String(state.currentNumber);
 
   return (
     <div className="flex flex-col min-h-screen px-4 py-6">
@@ -66,7 +114,9 @@ export default function GameScreen() {
             exit={{ scale: 0.5, opacity: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 20 }}
             className={`font-display text-center leading-none ${
-              isReplacement
+              needsInput
+                ? "text-[clamp(5rem,20vw,8rem)] text-electric-yellow text-glow-yellow"
+                : isReplacement
                 ? "text-[clamp(3rem,15vw,6rem)] text-neon-pink text-glow-pink"
                 : "text-[clamp(5rem,20vw,8rem)] text-foreground"
             }`}
@@ -74,6 +124,52 @@ export default function GameScreen() {
             {currentDisplay}
           </motion.div>
         </AnimatePresence>
+
+        {/* Input challenge for replacements */}
+        {needsInput && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col items-center gap-3 w-full max-w-xs"
+          >
+            <p className="text-sm text-muted-foreground font-body">
+              What replaces <strong className="text-neon-pink">{state.currentNumber}</strong>?
+            </p>
+            <div className="relative w-full">
+              <input
+                ref={inputRef}
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                placeholder="Type the word..."
+                maxLength={20}
+                className={`w-full bg-card border-2 rounded-xl px-4 py-4 text-center font-display text-xl text-foreground placeholder:text-muted-foreground focus:outline-none transition-colors ${
+                  showWrong
+                    ? "border-fail animate-pulse"
+                    : "border-border focus:border-primary"
+                }`}
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                Tries left:{" "}
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <span key={i} className={i < triesLeft ? "text-electric-yellow" : "text-muted-foreground/30"}>
+                    ●
+                  </span>
+                ))}
+              </span>
+            </div>
+            <button
+              onClick={handleInputSubmit}
+              disabled={!inputValue.trim()}
+              className="w-full py-3 rounded-xl bg-success text-background font-display text-lg active:scale-95 transition-transform disabled:opacity-40"
+            >
+              SUBMIT ✓
+            </button>
+          </motion.div>
+        )}
 
         <motion.p
           key={state.currentPlayer}
@@ -122,15 +218,17 @@ export default function GameScreen() {
         </div>
       )}
 
-      {/* Action buttons */}
+      {/* Action buttons - only show NEXT when no input challenge */}
       <div className="flex flex-col gap-3 pb-4">
-        <button
-          onClick={handleNext}
-          disabled={state.isAITurn}
-          className="w-full py-4 rounded-xl bg-success text-background font-display text-xl active:scale-95 transition-transform disabled:opacity-40"
-        >
-          NEXT ✓
-        </button>
+        {!needsInput && (
+          <button
+            onClick={handleNext}
+            disabled={state.isAITurn}
+            className="w-full py-4 rounded-xl bg-success text-background font-display text-xl active:scale-95 transition-transform disabled:opacity-40"
+          >
+            NEXT ✓
+          </button>
+        )}
         <button
           onClick={handleFail}
           disabled={state.isAITurn}

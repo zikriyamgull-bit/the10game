@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from "react";
 
 export type GameMode = "solo" | "local" | null;
-export type Screen = "home" | "game" | "replacement" | "gameover" | "tutorial";
+export type Screen = "home" | "game" | "replacement" | "gameover" | "tutorial" | "roundSummary";
 
 interface GameState {
   screen: Screen;
@@ -83,7 +83,7 @@ function gameReducer(state: GameState, action: Action): GameState {
         currentNumber: 1,
         currentPlayer: nextPlayer,
         isAITurn: state.mode === "solo" && nextPlayer === 2,
-        screen: "game",
+        screen: "roundSummary",
       };
     }
     case "PLAYER_FAILED":

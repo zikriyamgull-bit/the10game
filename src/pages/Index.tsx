@@ -4,6 +4,7 @@ import GameScreen from "@/components/GameScreen";
 import ReplacementScreen from "@/components/ReplacementScreen";
 import GameOverScreen from "@/components/GameOverScreen";
 import TutorialScreen from "@/components/TutorialScreen";
+import RoundSummaryScreen from "@/components/RoundSummaryScreen";
 import { AnimatePresence, motion } from "framer-motion";
 
 function GameRouter() {
@@ -24,6 +25,7 @@ function GameRouter() {
         {state.screen === "replacement" && <ReplacementScreen />}
         {state.screen === "gameover" && <GameOverScreen />}
         {state.screen === "tutorial" && <TutorialScreen />}
+        {state.screen === "roundSummary" && <RoundSummaryScreen />}
       </motion.div>
     </AnimatePresence>
   );

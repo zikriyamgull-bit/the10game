@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useCallback, useEffect } from "react";
 
 export type GameMode = "solo" | "local" | null;
-export type Screen = "home" | "game" | "replacement" | "gameover" | "tutorial";
+export type Screen = "home" | "game" | "replacement" | "gameover" | "tutorial" | "roundSummary";
 
 interface GameState {
   screen: Screen;

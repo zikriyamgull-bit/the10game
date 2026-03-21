@@ -106,7 +106,8 @@ export default function GameScreen() {
   return (
     <div className="flex flex-col min-h-screen px-4 py-6">
       {/* Top bar */}
-      <div className="flex justify-between text-sm font-body text-muted-foreground bg-card rounded-lg px-4 py-2">
+      <div className="flex items-center justify-between text-sm font-body text-muted-foreground bg-card rounded-lg px-4 py-2">
+        <PauseMenu />
         <span>Round <strong className="text-foreground">{state.round}</strong></span>
         <span>Replacements <strong className="text-neon-pink">{state.totalReplacements}</strong></span>
         <span>Streak <strong className="text-electric-yellow">{state.streak}</strong></span>

@@ -36,7 +36,10 @@ export default function GameScreen() {
       aiTimerRef.current = setTimeout(() => {
         const replacementCount = Object.keys(state.replacements).length;
         const currentHasReplacement = !!state.replacements[state.currentNumber];
-        if (currentHasReplacement && !shouldAISucceed(replacementCount)) {
+        // At number 10, always advance to replacement screen (never fail here)
+        if (state.currentNumber === 10) {
+          dispatch({ type: "ADVANCE" });
+        } else if (currentHasReplacement && !shouldAISucceed(replacementCount)) {
           dispatch({ type: "AI_FAILED" });
         } else {
           dispatch({ type: "ADVANCE" });

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useGame, shouldAISucceed } from "@/contexts/GameContext";
-import { ChevronDown, ChevronUp } from "lucide-react";
 
 export default function GameScreen() {
   const { state, dispatch } = useGame();

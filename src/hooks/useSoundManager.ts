@@ -44,6 +44,26 @@ class SoundManager {
     return this.ctx;
   }
 
+  setTier(replacementCount: number) {
+    let tier: typeof this._tier;
+    if (replacementCount <= 1) tier = "easy";
+    else if (replacementCount <= 4) tier = "competitive";
+    else if (replacementCount <= 7) tier = "hard";
+    else if (replacementCount <= 10) tier = "veryhard";
+    else tier = "boss";
+
+    if (tier !== this._tier) {
+      this._tier = tier;
+      if (this.musicPlaying) {
+        // Restart loop with new tier
+        this.musicOscs.forEach(o => { try { o.stop(); } catch {} });
+        this.musicOscs = [];
+        if (this.musicTimer) clearTimeout(this.musicTimer);
+        this.playAmbientLoop();
+      }
+    }
+  }
+
   startMusic() {
     if (this.musicPlaying) return;
     this.musicPlaying = true;

@@ -81,6 +81,7 @@ class SoundManager {
     this.musicPlaying = false;
     this.musicOscs.forEach(o => { try { o.stop(); } catch {} });
     this.musicOscs = [];
+    if (this.musicTimer) { clearTimeout(this.musicTimer); this.musicTimer = null; }
     if (this.musicGain) {
       this.musicGain.disconnect();
       this.musicGain = null;

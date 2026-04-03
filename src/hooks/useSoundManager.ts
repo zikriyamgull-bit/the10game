@@ -12,6 +12,8 @@ class SoundManager {
   private musicGain: GainNode | null = null;
   private musicOscs: OscillatorNode[] = [];
   private musicPlaying = false;
+  private musicTimer: ReturnType<typeof setTimeout> | null = null;
+  private _tier: "easy" | "competitive" | "hard" | "veryhard" | "boss" = "easy";
 
   constructor() {
     this._muted = localStorage.getItem(MUTE_KEY) === "true";
@@ -42,6 +44,26 @@ class SoundManager {
     return this.ctx;
   }
 
+  setTier(replacementCount: number) {
+    let tier: typeof this._tier;
+    if (replacementCount <= 1) tier = "easy";
+    else if (replacementCount <= 4) tier = "competitive";
+    else if (replacementCount <= 7) tier = "hard";
+    else if (replacementCount <= 10) tier = "veryhard";
+    else tier = "boss";
+
+    if (tier !== this._tier) {
+      this._tier = tier;
+      if (this.musicPlaying) {
+        // Restart loop with new tier
+        this.musicOscs.forEach(o => { try { o.stop(); } catch {} });
+        this.musicOscs = [];
+        if (this.musicTimer) clearTimeout(this.musicTimer);
+        this.playAmbientLoop();
+      }
+    }
+  }
+
   startMusic() {
     if (this.musicPlaying) return;
     this.musicPlaying = true;
@@ -59,6 +81,7 @@ class SoundManager {
     this.musicPlaying = false;
     this.musicOscs.forEach(o => { try { o.stop(); } catch {} });
     this.musicOscs = [];
+    if (this.musicTimer) { clearTimeout(this.musicTimer); this.musicTimer = null; }
     if (this.musicGain) {
       this.musicGain.disconnect();
       this.musicGain = null;
@@ -68,56 +91,107 @@ class SoundManager {
   private playAmbientLoop() {
     if (!this.musicPlaying || !this.musicGain) return;
     const ctx = this.getCtx();
+    const t = this._tier;
 
-    // Bright, playful major chords in higher register
-    const chords = [
-      [261.63, 329.63, 392.00, 523.25], // C maj
-      [293.66, 369.99, 440.00, 587.33], // D maj
-      [349.23, 440.00, 523.25, 698.46], // F maj
-      [392.00, 493.88, 587.33, 783.99], // G maj
-      [261.63, 329.63, 392.00, 523.25], // C maj
-      [329.63, 415.30, 493.88, 659.25], // E maj
-      [349.23, 440.00, 523.25, 698.46], // F maj
-      [392.00, 493.88, 587.33, 783.99], // G maj
-    ];
+    // Tier-specific chord sets, tempos, and timbres
+    const tierConfig = {
+      easy: {
+        chords: [
+          [261.63, 329.63, 392.00], // C maj
+          [293.66, 369.99, 440.00], // D maj
+          [349.23, 440.00, 523.25], // F maj
+          [392.00, 493.88, 587.33], // G maj
+        ],
+        dur: 2.5, wave: "sine" as OscillatorType, pluckWave: "triangle" as OscillatorType,
+        vol: 0.6, pluckVol: 0.5, attack: 0.4,
+      },
+      competitive: {
+        chords: [
+          [261.63, 329.63, 392.00, 523.25], // C maj7
+          [220.00, 277.18, 329.63, 440.00], // A maj
+          [246.94, 311.13, 369.99, 493.88], // B maj
+          [329.63, 415.30, 493.88, 659.25], // E maj
+        ],
+        dur: 1.8, wave: "sine" as OscillatorType, pluckWave: "triangle" as OscillatorType,
+        vol: 0.65, pluckVol: 0.7, attack: 0.25,
+      },
+      hard: {
+        chords: [
+          [261.63, 311.13, 392.00, 466.16], // Cm7
+          [233.08, 277.18, 349.23, 415.30], // Bbm
+          [207.65, 261.63, 311.13, 392.00], // Ab
+          [246.94, 293.66, 369.99, 440.00], // Bm
+        ],
+        dur: 1.4, wave: "triangle" as OscillatorType, pluckWave: "sawtooth" as OscillatorType,
+        vol: 0.7, pluckVol: 0.8, attack: 0.15,
+      },
+      veryhard: {
+        chords: [
+          [220.00, 261.63, 329.63, 415.30], // Am
+          [196.00, 246.94, 293.66, 369.99], // Gm
+          [207.65, 261.63, 311.13, 392.00], // Ab
+          [185.00, 233.08, 277.18, 349.23], // F#m
+          [196.00, 246.94, 293.66, 369.99], // Gm
+          [174.61, 220.00, 261.63, 329.63], // Fm
+        ],
+        dur: 1.0, wave: "triangle" as OscillatorType, pluckWave: "sawtooth" as OscillatorType,
+        vol: 0.75, pluckVol: 0.9, attack: 0.1,
+      },
+      boss: {
+        chords: [
+          [146.83, 174.61, 220.00, 293.66], // Dm dark
+          [138.59, 164.81, 207.65, 277.18], // C#m
+          [130.81, 155.56, 196.00, 261.63], // Cm
+          [123.47, 146.83, 185.00, 246.94], // Bm
+          [116.54, 138.59, 174.61, 233.08], // Bbm
+          [130.81, 155.56, 196.00, 261.63], // Cm
+          [138.59, 164.81, 207.65, 277.18], // C#m
+          [146.83, 174.61, 220.00, 293.66], // Dm
+        ],
+        dur: 0.8, wave: "sawtooth" as OscillatorType, pluckWave: "square" as OscillatorType,
+        vol: 0.5, pluckVol: 1.0, attack: 0.05,
+      },
+    };
+
+    const cfg = tierConfig[t];
     const now = ctx.currentTime;
-    const chordDur = 2;
 
-    chords.forEach((freqs, ci) => {
+    cfg.chords.forEach((freqs, ci) => {
       freqs.forEach((f, fi) => {
         const osc = ctx.createOscillator();
-        osc.type = fi === 3 ? "triangle" : "sine";
-        osc.frequency.setValueAtTime(f, now + ci * chordDur);
+        osc.type = fi === freqs.length - 1 ? cfg.pluckWave : cfg.wave;
+        osc.frequency.setValueAtTime(f, now + ci * cfg.dur);
         const env = ctx.createGain();
-        const vol = fi === 3 ? 0.4 : 0.7;
-        env.gain.setValueAtTime(0.001, now + ci * chordDur);
-        env.gain.linearRampToValueAtTime(vol, now + ci * chordDur + 0.3);
-        env.gain.setValueAtTime(vol, now + ci * chordDur + chordDur * 0.6);
-        env.gain.linearRampToValueAtTime(0.001, now + (ci + 1) * chordDur);
+        const v = fi === freqs.length - 1 ? cfg.vol * 0.5 : cfg.vol;
+        env.gain.setValueAtTime(0.001, now + ci * cfg.dur);
+        env.gain.linearRampToValueAtTime(v, now + ci * cfg.dur + cfg.attack);
+        env.gain.setValueAtTime(v, now + ci * cfg.dur + cfg.dur * 0.55);
+        env.gain.linearRampToValueAtTime(0.001, now + (ci + 1) * cfg.dur);
         osc.connect(env);
         env.connect(this.musicGain!);
-        osc.start(now + ci * chordDur);
-        osc.stop(now + (ci + 1) * chordDur + 0.05);
+        osc.start(now + ci * cfg.dur);
+        osc.stop(now + (ci + 1) * cfg.dur + 0.05);
         this.musicOscs.push(osc);
       });
 
-      // Bouncy pluck on each chord change
+      // Pluck accent
       const pluck = ctx.createOscillator();
-      pluck.type = "triangle";
-      pluck.frequency.setValueAtTime(freqs[2] * 2, now + ci * chordDur);
+      pluck.type = cfg.pluckWave;
+      pluck.frequency.setValueAtTime(freqs[Math.min(2, freqs.length - 1)] * 2, now + ci * cfg.dur);
       const pluckEnv = ctx.createGain();
-      pluckEnv.gain.setValueAtTime(0.8, now + ci * chordDur);
-      pluckEnv.gain.exponentialRampToValueAtTime(0.001, now + ci * chordDur + 0.25);
+      pluckEnv.gain.setValueAtTime(cfg.pluckVol, now + ci * cfg.dur);
+      pluckEnv.gain.exponentialRampToValueAtTime(0.001, now + ci * cfg.dur + Math.min(0.25, cfg.dur * 0.3));
       pluck.connect(pluckEnv);
       pluckEnv.connect(this.musicGain!);
-      pluck.start(now + ci * chordDur);
-      pluck.stop(now + ci * chordDur + 0.3);
+      pluck.start(now + ci * cfg.dur);
+      pluck.stop(now + ci * cfg.dur + 0.3);
       this.musicOscs.push(pluck);
     });
 
-    const totalDur = chords.length * chordDur * 1000;
-    setTimeout(() => {
+    const totalDur = cfg.chords.length * cfg.dur * 1000;
+    this.musicTimer = setTimeout(() => {
       this.musicOscs = [];
+      this.musicTimer = null;
       this.playAmbientLoop();
     }, totalDur);
   }

@@ -20,7 +20,11 @@ export default function GameScreen() {
     };
   }, []);
 
-  // Input challenge state
+  // Update music tier when replacements change
+  useEffect(() => {
+    soundManager.setTier(Object.keys(state.replacements).length);
+  }, [state.replacements]);
+
   const [inputValue, setInputValue] = useState("");
   const [triesLeft, setTriesLeft] = useState(3);
   const [showWrong, setShowWrong] = useState(false);

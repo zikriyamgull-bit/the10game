@@ -7,6 +7,18 @@ import { soundManager } from "@/hooks/useSoundManager";
 export default function GameScreen() {
   const { state, dispatch } = useGame();
   const aiTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const musicStarted = useRef(false);
+
+  useEffect(() => {
+    if (!musicStarted.current) {
+      musicStarted.current = true;
+      soundManager.startMusic();
+    }
+    return () => {
+      soundManager.stopMusic();
+      musicStarted.current = false;
+    };
+  }, []);
 
   // Input challenge state
   const [inputValue, setInputValue] = useState("");

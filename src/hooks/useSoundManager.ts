@@ -68,30 +68,51 @@ class SoundManager {
   private playAmbientLoop() {
     if (!this.musicPlaying || !this.musicGain) return;
     const ctx = this.getCtx();
+
+    // Bright, playful major chords in higher register
     const chords = [
-      [130.81, 164.81, 196.00], // C3 E3 G3
-      [110.00, 138.59, 164.81], // A2 C#3 E3
-      [146.83, 185.00, 220.00], // D3 F#3 A3
-      [123.47, 155.56, 185.00], // B2 Eb3 F#3
+      [261.63, 329.63, 392.00, 523.25], // C maj
+      [293.66, 369.99, 440.00, 587.33], // D maj
+      [349.23, 440.00, 523.25, 698.46], // F maj
+      [392.00, 493.88, 587.33, 783.99], // G maj
+      [261.63, 329.63, 392.00, 523.25], // C maj
+      [329.63, 415.30, 493.88, 659.25], // E maj
+      [349.23, 440.00, 523.25, 698.46], // F maj
+      [392.00, 493.88, 587.33, 783.99], // G maj
     ];
     const now = ctx.currentTime;
-    const chordDur = 4;
+    const chordDur = 2;
 
     chords.forEach((freqs, ci) => {
-      freqs.forEach(f => {
+      freqs.forEach((f, fi) => {
         const osc = ctx.createOscillator();
-        osc.type = "sine";
+        osc.type = fi === 3 ? "triangle" : "sine";
         osc.frequency.setValueAtTime(f, now + ci * chordDur);
         const env = ctx.createGain();
+        const vol = fi === 3 ? 0.4 : 0.7;
         env.gain.setValueAtTime(0.001, now + ci * chordDur);
-        env.gain.linearRampToValueAtTime(1, now + ci * chordDur + 1.5);
+        env.gain.linearRampToValueAtTime(vol, now + ci * chordDur + 0.3);
+        env.gain.setValueAtTime(vol, now + ci * chordDur + chordDur * 0.6);
         env.gain.linearRampToValueAtTime(0.001, now + (ci + 1) * chordDur);
         osc.connect(env);
         env.connect(this.musicGain!);
         osc.start(now + ci * chordDur);
-        osc.stop(now + (ci + 1) * chordDur);
+        osc.stop(now + (ci + 1) * chordDur + 0.05);
         this.musicOscs.push(osc);
       });
+
+      // Bouncy pluck on each chord change
+      const pluck = ctx.createOscillator();
+      pluck.type = "triangle";
+      pluck.frequency.setValueAtTime(freqs[2] * 2, now + ci * chordDur);
+      const pluckEnv = ctx.createGain();
+      pluckEnv.gain.setValueAtTime(0.8, now + ci * chordDur);
+      pluckEnv.gain.exponentialRampToValueAtTime(0.001, now + ci * chordDur + 0.25);
+      pluck.connect(pluckEnv);
+      pluckEnv.connect(this.musicGain!);
+      pluck.start(now + ci * chordDur);
+      pluck.stop(now + ci * chordDur + 0.3);
+      this.musicOscs.push(pluck);
     });
 
     const totalDur = chords.length * chordDur * 1000;

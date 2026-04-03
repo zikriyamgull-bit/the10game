@@ -1,13 +1,14 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { Pause, Volume2, VolumeX, Home, X } from "lucide-react";
+import { Pause, Volume2, VolumeX, Home, X, Music } from "lucide-react";
 import { useState } from "react";
 import { useGame } from "@/contexts/GameContext";
 import { useSoundManager, soundManager } from "@/hooks/useSoundManager";
+import { Slider } from "@/components/ui/slider";
 
 export default function PauseMenu() {
   const [open, setOpen] = useState(false);
   const { dispatch } = useGame();
-  const { muted, toggleMute } = useSoundManager();
+  const { muted, toggleMute, musicVolume, setMusicVol } = useSoundManager();
 
   const handleOpen = () => {
     soundManager.click();
@@ -21,6 +22,7 @@ export default function PauseMenu() {
 
   const handleMainMenu = () => {
     soundManager.click();
+    soundManager.stopMusic();
     dispatch({ type: "RESET" });
   };
 
@@ -74,6 +76,20 @@ export default function PauseMenu() {
                   </>
                 )}
               </button>
+
+              <div className="flex flex-col gap-2 w-full py-3 px-4 rounded-xl bg-muted">
+                <div className="flex items-center gap-3 text-foreground font-display text-lg">
+                  <Music className="w-5 h-5 text-primary" />
+                  MUSIC
+                </div>
+                <Slider
+                  value={[musicVolume * 100]}
+                  onValueChange={([v]) => setMusicVol(v / 100)}
+                  max={100}
+                  step={1}
+                  className="w-full"
+                />
+              </div>
 
               <button
                 onClick={handleMainMenu}

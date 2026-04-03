@@ -12,6 +12,8 @@ class SoundManager {
   private musicGain: GainNode | null = null;
   private musicOscs: OscillatorNode[] = [];
   private musicPlaying = false;
+  private musicTimer: ReturnType<typeof setTimeout> | null = null;
+  private _tier: "easy" | "competitive" | "hard" | "veryhard" | "boss" = "easy";
 
   constructor() {
     this._muted = localStorage.getItem(MUTE_KEY) === "true";

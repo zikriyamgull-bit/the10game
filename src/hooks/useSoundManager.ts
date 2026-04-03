@@ -196,13 +196,19 @@ const soundManager = new SoundManager();
 
 export function useSoundManager() {
   const [muted, setMuted] = useState(soundManager.muted);
+  const [musicVolume, setMusicVolume] = useState(soundManager.musicVolume);
 
   const toggleMute = useCallback(() => {
     soundManager.muted = !soundManager.muted;
     setMuted(soundManager.muted);
   }, []);
 
-  return { sound: soundManager, muted, toggleMute };
+  const setMusicVol = useCallback((v: number) => {
+    soundManager.musicVolume = v;
+    setMusicVolume(v);
+  }, []);
+
+  return { sound: soundManager, muted, toggleMute, musicVolume, setMusicVol };
 }
 
 export { soundManager };
